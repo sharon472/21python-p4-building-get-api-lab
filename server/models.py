@@ -11,6 +11,7 @@ db = SQLAlchemy(metadata=metadata)
 class Bakery(db.Model, SerializerMixin):
     __tablename__ = 'bakeries'
 
+    # Prevent infinite recursion in nested baked_goods
     serialize_rules = ('-baked_goods.bakery',)
 
     id = db.Column(db.Integer, primary_key=True)
@@ -18,7 +19,7 @@ class Bakery(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    baked_goods = db.relationship('BakedGood', backref='bakery')
+    baked_goods = db.relationship('BakedGood', backref='bakery', lazy=True)
 
     def __repr__(self):
         return f'<Bakery {self.name}>'
@@ -26,11 +27,12 @@ class Bakery(db.Model, SerializerMixin):
 class BakedGood(db.Model, SerializerMixin):
     __tablename__ = 'baked_goods'
 
+    # Prevent infinite recursion in nested bakery
     serialize_rules = ('-bakery.baked_goods',)
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    price = db.Column(db.Integer)
+    price = db.Column(db.Float)  # <-- changed from Integer to Float
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
